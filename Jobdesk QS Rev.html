@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Non-Tender</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#EEF0F8; --surface:#FFFFFF; --panel:#F5F6FC; --border:#E2E5EF; --border2:#CDD2E8;
+  --text-h:#161929; --text:#2B2F50; --text-sec:#585C80; --text-muted:#9296B0;
+  --blue:#3B6CF4;
+  --done-bg:#E6F9F0; --done-fg:#0A7A4E; --done-dot:#12B76A;
+  --prog-bg:#FFF8E6; --prog-fg:#926A00; --prog-dot:#F59E0B;
+  --belum-bg:#FEF0F0; --belum-fg:#B02A2A; --belum-dot:#EF4444;
+  --mt-bg:#F0F1F7; --mt-fg:#7880A0; --mt-dot:#B0B5CC;
+  --uk-bg:#FFF0F0; --uk-fg:#C0192A; --uk-bd:#FFCDD2;
+  --ut-bg:#FFF4E6; --ut-fg:#9A4500; --ut-bd:#FFD8A8;
+  --us-bg:#FFFBE6; --us-fg:#856200; --us-bd:#FFE082;
+  --ur-bg:#F0FBF5; --ur-fg:#0A6640; --ur-bd:#A7F0C4;
+  --un-bg:#F0F1F7; --un-fg:#7880A0; --un-bd:#D0D5E8;
+  --shadow-sm:0 1px 4px rgba(20,30,80,.07);
+  --shadow-md:0 4px 18px rgba(20,30,80,.10);
+  --shadow-drag:0 8px 32px rgba(20,30,80,.18);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;padding:24px 20px 60px;}
+
+/* ── HEADER ── */
+.header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;gap:16px;flex-wrap:wrap;}
+.header-badge{display:inline-block;background:var(--blue);color:#fff;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:99px;margin-bottom:7px;}
+.header-title{font-size:24px;font-weight:800;color:var(--text-h);letter-spacing:-.5px;}
+.header-sub{font-size:11.5px;color:var(--text-muted);margin-top:4px;line-height:1.5;}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.last-updated{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-muted);background:var(--surface);border:1px solid var(--border);padding:5px 13px;border-radius:8px;white-space:nowrap;box-shadow:var(--shadow-sm);}
+.sort-bar{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;align-items:center;}
+.sort-lbl{font-size:11.5px;font-weight:600;color:var(--text-muted);}
+.sort-btn{font-size:11.5px;font-weight:600;padding:4px 12px;border-radius:99px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text-sec);cursor:pointer;transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif;}
+.sort-btn:hover,.sort-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+/* ── SUMMARY ── */
+.summary-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.sum-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:17px 18px 15px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;transition:box-shadow .2s,transform .2s;}
+.sum-card:hover{box-shadow:var(--shadow-md);transform:translateY(-1px);}
+.sum-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--ac,#ccc);border-radius:0 0 13px 13px;}
+.sum-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:9px;}
+.sum-label{font-size:10.5px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;}
+.sum-value{font-size:28px;font-weight:800;line-height:1;}
+.sum-desc{font-size:11px;color:var(--text-muted);margin-top:4px;}
+
+/* ── LEGEND ── */
+.urgency-legend{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center;}
+.legend-lbl{font-size:11.5px;font-weight:700;color:var(--text-muted);}
+.u-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;font-size:11.5px;font-weight:700;border:1.5px solid;}
+.u-k{background:var(--uk-bg);color:var(--uk-fg);border-color:var(--uk-bd);}
+.u-t{background:var(--ut-bg);color:var(--ut-fg);border-color:var(--ut-bd);}
+.u-s{background:var(--us-bg);color:var(--us-fg);border-color:var(--us-bd);}
+.u-r{background:var(--ur-bg);color:var(--ur-fg);border-color:var(--ur-bd);}
+.u-n{background:var(--un-bg);color:var(--un-fg);border-color:var(--un-bd);}
+
+/* ── AUTO SORT BANNER (inside each section) ── */
+.auto-sort-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 16px;
+  background:linear-gradient(90deg,#FFF0F0,#FFF8F0);
+  border-bottom:1px solid var(--uk-bd);
+  flex-wrap:wrap;
+}
+.auto-sort-info{font-size:11.5px;color:var(--uk-fg);font-weight:600;flex:1;min-width:180px;}
+.auto-sort-info span{color:var(--text-muted);font-weight:400;}
+.auto-sort-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 14px;border-radius:99px;
+  border:1.5px solid var(--uk-fg);
+  background:var(--uk-fg);color:#fff;
+  font-size:11.5px;font-weight:700;
+  cursor:pointer;transition:all .15s;
+  font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;
+}
+.auto-sort-btn:hover{background:#A01020;border-color:#A01020;}
+.manual-sort-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 14px;border-radius:99px;
+  border:1.5px solid var(--border2);
+  background:var(--surface);color:var(--text-sec);
+  font-size:11.5px;font-weight:600;
+  cursor:pointer;transition:all .15s;
+  font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;
+}
+.manual-sort-btn:hover{background:var(--panel);}
+
+/* ── DEV SECTION ── */
+.dev-section{background:var(--surface);border:1px solid var(--border);border-radius:15px;margin-bottom:16px;box-shadow:var(--shadow-sm);overflow:hidden;transition:box-shadow .2s;}
+.dev-section:hover{box-shadow:var(--shadow-md);}
+.dev-header{display:flex;align-items:center;justify-content:space-between;padding:13px 20px;cursor:pointer;user-select:none;border-bottom:1px solid var(--border);background:var(--panel);transition:background .15s;}
+.dev-header:hover{background:#e8eaf5;}
+.dev-left{display:flex;align-items:center;gap:10px;}
+.dev-stripe{width:4px;height:28px;border-radius:99px;flex-shrink:0;}
+.dev-name{font-size:14px;font-weight:700;color:var(--text-h);}
+.dev-meta{display:flex;gap:7px;align-items:center;}
+.dpill{font-size:11.5px;font-weight:600;color:var(--text-sec);background:var(--border);padding:2px 10px;border-radius:99px;white-space:nowrap;}
+.dpill.gd{background:var(--done-bg);color:var(--done-fg);}
+.dpill.kritis{background:var(--uk-bg);color:var(--uk-fg);}
+.chevron{width:23px;height:23px;background:var(--border);border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--text-sec);transition:transform .2s;margin-left:4px;flex-shrink:0;}
+.chevron.open{transform:rotate(180deg);}
+
+/* ── SCROLLABLE TABLE ── */
+.table-scroll{overflow-x:auto;width:100%;}
+.table-scroll::-webkit-scrollbar{height:5px;}
+.table-scroll::-webkit-scrollbar-track{background:var(--panel);}
+.table-scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px;}
+.table-inner{min-width:1060px;}
+
+/* GRID: drag-handle | urgency | num | name | status | mulai | selesai | durasi | sisa | proyek | ket | mv-up | mv-dn | del-proj */
+.PROJ_COLS{grid-template-columns:22px 26px 18px 1fr 48px 22px 22px 26px;}
+/* GRID item rows: urgency | dash | name | status | mulai | selesai | durasi | sisa | proyek | ket | spacer×3 | del */
+.ITEM_COLS{grid-template-columns:26px 18px minmax(160px,1fr) 120px 104px 104px 68px 82px 86px minmax(140px,1fr) 22px 22px 26px 28px;}
+
+.thr{
+  display:grid;
+  grid-template-columns:26px 18px minmax(160px,1fr) 120px 104px 104px 68px 82px 86px minmax(140px,1fr) 22px 22px 26px 28px;
+  gap:8px;padding:7px 20px;
+  background:#F2F4FB;border-bottom:1px solid var(--border);
+}
+.th{font-size:9.5px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* ── PROJECT GROUP ── */
+.proj-group{border-bottom:1px solid var(--border);transition:background .12s;}
+.proj-group:last-child{border-bottom:none;}
+.proj-group.dragging{opacity:.3;border:2px dashed var(--blue);border-radius:6px;background:#F0F4FF;}
+.proj-group.drag-over-top{border-top:3px solid var(--blue);}
+.proj-group.drag-over-bottom{border-bottom:3px solid var(--blue);}
+
+/* ── PROJECT NAME ROW ── */
+.proj-name-row{
+  display:grid;
+  grid-template-columns:22px 26px 18px 1fr auto 22px 22px 26px;
+  align-items:center;gap:7px;
+  padding:8px 20px 7px;
+  background:#F9FAFF;border-bottom:1px solid var(--border);
+  min-width:1060px;
+  transition:background .12s;
+}
+.proj-name-row:hover{background:#F2F4FF;}
+
+/* ── DRAG HANDLE ── */
+.drag-handle{
+  width:20px;height:20px;display:flex;align-items:center;justify-content:center;
+  cursor:grab;color:var(--text-muted);font-size:14px;border-radius:4px;
+  transition:background .12s,color .12s;user-select:none;flex-shrink:0;
+}
+.drag-handle:hover{background:var(--border);color:var(--text-sec);}
+.drag-handle:active{cursor:grabbing;}
+
+/* ── URGENCY MINI BADGE (project level) ── */
+.proj-ub{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:6px;font-size:12px;
+  border:1.5px solid transparent;flex-shrink:0;
+}
+.pub-k{background:var(--uk-bg);border-color:var(--uk-bd);}
+.pub-t{background:var(--ut-bg);border-color:var(--ut-bd);}
+.pub-s{background:var(--us-bg);border-color:var(--us-bd);}
+.pub-r{background:var(--ur-bg);border-color:var(--ur-bd);}
+.pub-n{background:var(--un-bg);border-color:var(--un-bd);}
+
+.proj-num{font-size:10.5px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--text-muted);flex-shrink:0;}
+
+/* move up/down buttons */
+.mv-btn{
+  width:22px;height:22px;border-radius:6px;border:1.5px solid var(--border2);
+  background:var(--surface);color:var(--text-sec);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:11px;transition:all .15s;flex-shrink:0;
+}
+.mv-btn:hover:not(:disabled){background:var(--blue);color:#fff;border-color:var(--blue);}
+.mv-btn:disabled{opacity:.25;cursor:not-allowed;}
+
+.proj-del-btn{
+  flex-shrink:0;width:24px;height:24px;border-radius:7px;border:1.5px solid transparent;
+  background:transparent;color:var(--text-muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;
+}
+.proj-del-btn:hover{background:var(--belum-bg);color:var(--belum-fg);border-color:#FECACA;}
+
+/* ── ITEM ROW ── */
+.item-row{
+  display:grid;
+  grid-template-columns:26px 18px minmax(160px,1fr) 120px 104px 104px 68px 82px 86px minmax(140px,1fr) 22px 22px 26px 28px;
+  gap:8px;align-items:center;
+  padding:6px 20px;border-bottom:1px solid #F0F2F8;
+  transition:background .12s;min-width:1060px;
+}
+.item-row:hover{background:#F5F6FD;}
+.item-row.rl-k{border-left:3px solid var(--uk-fg);padding-left:17px;}
+.item-row.rl-t{border-left:3px solid var(--ut-fg);padding-left:17px;}
+.item-row.rl-s{border-left:3px solid var(--us-fg);padding-left:17px;}
+.item-row.rl-r{border-left:3px solid var(--ur-fg);padding-left:17px;}
+.item-dash{font-size:9px;color:var(--text-muted);text-align:center;}
+
+/* ── URGENCY BADGE (item) ── */
+.ub{display:inline-flex;align-items:center;justify-content:center;width:21px;height:21px;border-radius:6px;font-size:12px;cursor:pointer;transition:transform .15s,box-shadow .15s;border:1.5px solid transparent;flex-shrink:0;}
+.ub:hover{transform:scale(1.18);box-shadow:0 2px 8px rgba(0,0,0,.13);}
+.ub-k{background:var(--uk-bg);border-color:var(--uk-bd);}
+.ub-t{background:var(--ut-bg);border-color:var(--ut-bd);}
+.ub-s{background:var(--us-bg);border-color:var(--us-bd);}
+.ub-r{background:var(--ur-bg);border-color:var(--ur-bd);}
+.ub-n{background:var(--un-bg);border-color:var(--un-bd);}
+
+/* ── STATUS BADGE ── */
+.sbadge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px 3px 7px;border-radius:99px;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.sbadge::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.sbadge:hover{filter:brightness(.92);transform:scale(1.03);}
+.sd{background:var(--done-bg);color:var(--done-fg);} .sd::before{background:var(--done-dot);}
+.sp{background:var(--prog-bg);color:var(--prog-fg);} .sp::before{background:var(--prog-dot);}
+.sb{background:var(--belum-bg);color:var(--belum-fg);} .sb::before{background:var(--belum-dot);}
+.se{background:var(--mt-bg);color:var(--mt-fg);} .se::before{background:var(--mt-dot);}
+
+/* ── CHIPS ── */
+.chip{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:500;padding:3px 7px;border-radius:6px;white-space:nowrap;display:inline-block;}
+.chip-over{background:#FEE2E2;color:#B91C1C;}
+.chip-close{background:#FFF3CD;color:#92400E;}
+.chip-ok{background:#D1FAE5;color:#065F46;}
+.chip-dur{background:#EEF2FF;color:#3B4BC8;}
+.chip-none{color:var(--text-muted);font-size:11px;}
+
+/* ── INPUTS ── */
+.ed{background:transparent;border:1.5px solid transparent;color:var(--text);font-size:12.5px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:500;width:100%;padding:3px 6px;border-radius:6px;outline:none;transition:all .15s;min-width:0;}
+.ed:hover{background:#EEF0FA;border-color:var(--border2);}
+.ed:focus{background:#fff;border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,108,244,.09);}
+.ed::placeholder{color:var(--text-muted);font-weight:400;font-style:normal;}
+.ed-proj{font-weight:700;font-size:13px;color:var(--text-h);}
+.ed-item{font-size:12px;color:var(--text-sec);font-style:italic;}
+.ed-ket{color:#A04010;font-weight:500;}
+.di{background:transparent;border:1.5px solid transparent;color:var(--text-sec);font-size:10.5px;font-family:'JetBrains Mono',monospace;width:100%;padding:3px 5px;border-radius:6px;outline:none;transition:all .15s;cursor:pointer;min-width:0;}
+.di:hover{background:#EEF0FA;border-color:var(--border2);}
+.di:focus{background:#fff;border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,108,244,.09);color:var(--text);}
+
+/* ── BUTTONS ── */
+.del-btn{width:24px;height:24px;border-radius:6px;border:1.5px solid transparent;background:transparent;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;flex-shrink:0;}
+.del-btn:hover{background:var(--belum-bg);color:var(--belum-fg);border-color:#FECACA;}
+.add-item-btn{display:flex;align-items:center;gap:6px;padding:7px 20px;font-size:11.5px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:color .15s;background:none;border:none;font-family:'Plus Jakarta Sans',sans-serif;width:100%;border-top:1px dashed var(--border);min-width:1060px;}
+.add-item-btn:hover{color:var(--blue);}
+.add-proj-row{display:flex;align-items:center;border-top:1.5px dashed var(--border2);}
+.add-proj-btn{display:flex;align-items:center;gap:6px;padding:11px 20px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:color .15s;background:none;border:none;font-family:'Plus Jakarta Sans',sans-serif;flex:1;}
+.add-proj-btn:hover{color:var(--blue);}
+
+/* ── FLOAT MENUS ── */
+.fmenu{position:fixed;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:5px;z-index:1000;box-shadow:0 8px 26px rgba(20,30,80,.14);display:none;flex-direction:column;gap:2px;min-width:160px;}
+.fmenu.active{display:flex;}
+.mopt{padding:7px 12px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;font-family:'Plus Jakarta Sans',sans-serif;transition:background .12s;display:flex;align-items:center;gap:8px;}
+.mopt:hover{background:var(--panel);}
+.mdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.mdiv{height:1px;background:var(--border);margin:2px 0;}
+
+/* ── CONFIRM ── */
+.confirm-overlay{position:fixed;inset:0;background:rgba(20,25,60,.35);z-index:2000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px);}
+.confirm-overlay.active{display:flex;}
+.confirm-box{background:#fff;border-radius:16px;padding:28px 32px;box-shadow:0 16px 48px rgba(20,30,80,.18);max-width:380px;width:90%;text-align:center;}
+.confirm-icon{font-size:36px;margin-bottom:12px;}
+.confirm-title{font-size:16px;font-weight:800;color:var(--text-h);margin-bottom:6px;}
+.confirm-msg{font-size:13px;color:var(--text-sec);line-height:1.5;margin-bottom:22px;}
+.confirm-msg strong{color:var(--text-h);}
+.confirm-btns{display:flex;gap:10px;justify-content:center;}
+.confirm-cancel{padding:9px 22px;border-radius:99px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text-sec);font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;}
+.confirm-cancel:hover{background:var(--panel);}
+.confirm-delete{padding:9px 22px;border-radius:99px;border:none;background:#EF4444;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;}
+.confirm-delete:hover{background:#DC2626;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text-h);color:#fff;padding:10px 18px;border-radius:9px;font-size:13px;font-weight:600;box-shadow:var(--shadow-md);transform:translateY(60px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:9999;pointer-events:none;display:flex;align-items:center;gap:8px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast::before{content:'✓';font-size:14px;color:var(--done-dot);}
+
+.collapsed{display:none!important;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+.pulse-anim{animation:pulse 1.5s ease-in-out infinite;}
+
+/* ── HIGHLIGHT when auto-sorted ── */
+@keyframes highlightRow{0%{background:#DBEAFE;}100%{background:transparent;}}
+.proj-group.just-sorted{animation:highlightRow .8s ease-out forwards;}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="header-badge">Non-Tender</div>
+    <div class="header-title">Project Status Dashboard</div>
+    <div class="header-sub">Klik 🔴/status untuk edit · ⠿ drag proyek untuk ubah urutan · ↑↓ pindah posisi · Tersimpan otomatis</div>
+  </div>
+  <div class="header-right">
+    <div class="last-updated" id="lastUpdated">Belum ada update</div>
+    <div class="sort-bar">
+      <span class="sort-lbl">Urutkan item:</span>
+      <button class="sort-btn active" data-sort="default">Default</button>
+      <button class="sort-btn" data-sort="urgency">🔴 Urgency</button>
+      <button class="sort-btn" data-sort="deadline">📅 Deadline</button>
+      <button class="sort-btn" data-sort="status">📊 Status</button>
+    </div>
+  </div>
+</div>
+
+<div class="summary-grid" id="summaryGrid"></div>
+
+<div class="urgency-legend">
+  <span class="legend-lbl">Urgency:</span>
+  <span class="u-pill u-k">🔴 Kritis</span>
+  <span class="u-pill u-t">🟠 Tinggi</span>
+  <span class="u-pill u-s">🟡 Sedang</span>
+  <span class="u-pill u-r">🟢 Rendah</span>
+  <span class="u-pill u-n">⬜ Belum diset</span>
+</div>
+
+<!-- GLOBAL TOOLBAR -->
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+  <button id="globalAutoSortBtn" style="display:inline-flex;align-items:center;gap:6px;padding:7px 18px;border-radius:99px;border:1.5px solid #C0192A;background:#C0192A;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;white-space:nowrap;">
+    🔴 Auto Urutkan Semua Developer by Urgency
+  </button>
+  <button id="addDevBtn" style="display:inline-flex;align-items:center;gap:6px;padding:7px 18px;border-radius:99px;border:1.5px solid var(--blue);background:var(--blue);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;white-space:nowrap;">
+    ＋ Tambah Developer Baru
+  </button>
+</div>
+
+<div id="devSections"></div>
+
+<!-- STATUS MENU -->
+<div class="fmenu" id="statusMenu">
+  <div class="mopt" data-val="Done"><span class="mdot" style="background:#12B76A"></span>Done</div>
+  <div class="mopt" data-val="Progress"><span class="mdot" style="background:#F59E0B"></span>Progress</div>
+  <div class="mopt" data-val="Belum Start"><span class="mdot" style="background:#EF4444"></span>Belum Start</div>
+  <div class="mdiv"></div>
+  <div class="mopt" data-val=""><span class="mdot" style="background:#B0B5CC"></span>— Kosong</div>
+</div>
+
+<!-- URGENCY MENU -->
+<div class="fmenu" id="urgencyMenu">
+  <div class="mopt" data-val="kritis">🔴 Kritis</div>
+  <div class="mopt" data-val="tinggi">🟠 Tinggi</div>
+  <div class="mopt" data-val="sedang">🟡 Sedang</div>
+  <div class="mopt" data-val="rendah">🟢 Rendah</div>
+  <div class="mdiv"></div>
+  <div class="mopt" data-val="">⬜ Belum diset</div>
+</div>
+
+<!-- ADD DEVELOPER MODAL -->
+<div class="confirm-overlay" id="addDevOverlay">
+  <div class="confirm-box" style="max-width:440px;">
+    <div class="confirm-icon">🏢</div>
+    <div class="confirm-title">Tambah Developer Baru</div>
+    <div style="text-align:left;margin-bottom:18px;">
+      <label style="font-size:12px;font-weight:700;color:var(--text-sec);display:block;margin-bottom:6px;">Nama Developer</label>
+      <input id="newDevName" type="text" placeholder="Contoh: CIPUTRA - BSD" style="width:100%;padding:10px 14px;border:1.5px solid var(--border2);border-radius:9px;font-size:13.5px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;color:var(--text-h);outline:none;transition:border-color .15s;" />
+      <label style="font-size:12px;font-weight:700;color:var(--text-sec);display:block;margin:14px 0 8px;">Pilih Warna</label>
+      <div id="colorPicker" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+    </div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" id="addDevCancel">Batal</button>
+      <button class="confirm-delete" id="addDevOk" style="background:var(--blue);">＋ Tambah</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirmIcon">🗑️</div>
+    <div class="confirm-title" id="confirmTitle">Hapus?</div>
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" id="confirmCancel">Batal</button>
+      <button class="confirm-delete" id="confirmOk">Ya, Hapus</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Tersimpan</div>
+
+<script>
+// ── CONSTANTS ─────────────────────────────────────────────────────
+const DEV_COLORS={
+  'PARAMOUNT':'#3B6CF4','GRAND WISATA':'#7C4DDB',
+  'SINARMASLAND - BSD':'#0FA877','JAYA REAL - BINTARO':'#E07B2A'
+};
+const PALETTE_NAMES = [
+  '#3B6CF4','#7C4DDB','#0FA877','#E07B2A','#E91E8C',
+  '#00897B','#EF5350','#1565C0','#6D4C41','#546E7A',
+  '#AD1457','#00838F','#558B2F','#4527A0','#D84315'
+];
+const UO={kritis:0,tinggi:1,sedang:2,rendah:3,'':4};
+const UE={kritis:'🔴',tinggi:'🟠',sedang:'🟡',rendah:'🟢','':'⬜'};
+const UC={kritis:'ub-k',tinggi:'ub-t',sedang:'ub-s',rendah:'ub-r','':'ub-n'};
+const PUC={kritis:'pub-k',tinggi:'pub-t',sedang:'pub-s',rendah:'pub-r','':'pub-n'};
+const RC={kritis:'rl-k',tinggi:'rl-t',sedang:'rl-s',rendah:'rl-r','':''};
+
+// ── DATA ──────────────────────────────────────────────────────────
+let data={developers:[
+  {name:'PARAMOUNT',projects:[
+    {name:'Maggiore - Paramount',items:[
+      {name:'Batas Besi',start:'Done',tglMulai:'',tglSelesai:'',urgency:'rendah',proyek:'',ket:'RAB => Perlu hitung RAP'},
+      {name:'Batas Material',start:'Done',tglMulai:'',tglSelesai:'',urgency:'rendah',proyek:'',ket:'RAB => Perlu hitung RAP'},
+      {name:'Basic Upah Mandor',start:'',tglMulai:'',tglSelesai:'',urgency:'',proyek:'',ket:''},
+    ]},
+    {name:'Ruko Maxiem Square - Paramount',items:[
+      {name:'Batas Besi',start:'Done',tglMulai:'',tglSelesai:'',urgency:'sedang',proyek:'',ket:'RAB => Perlu hitung RAP & Update Penambahan Studio Loft'},
+      {name:'Batas Material',start:'Belum Start',tglMulai:'',tglSelesai:'',urgency:'tinggi',proyek:'',ket:''},
+      {name:'Basic Upah Mandor',start:'',tglMulai:'',tglSelesai:'',urgency:'',proyek:'',ket:''},
+    ]},
+    {name:'Altadena',items:[
+      {name:'Batas Besi',start:'Progress',tglMulai:'',tglSelesai:'',urgency:'tinggi',proyek:'',ket:'RAP Basic L8, L10 belum'},
+      {name:'Batas Material',start:'Belum Start',tglMulai:'',tglSelesai:'',urgency:'sedang',proyek:'',ket:''},
+      {name:'Basic Upah Mandor',start:'',tglMulai:'',tglSelesai:'',urgency:'',proyek:'',ket:''},
+    ]},
+    {name:'Pasadena Tropis',items:[
+      {name:'Batas Besi',start:'Belum Start',tglMulai:'',tglSelesai:'',urgency:'kritis',proyek:'',ket:''},
+      {name:'Batas Material',start:'Belum Start',tglMulai:'',tglSelesai:'',urgency:'kritis',proyek:'',ket:''},
+      {name:'Basic Upah Mandor',start:'',tglMulai:'',tglSelesai:'',urgency:'',proyek:'',ket:''},
+    ]},
+  ]},
+  {name:'GRAND WISATA',projects:[
+    {name:'Altara - Grandwisata',items:[
+      {name:'Batas Besi',start:'Done',tglMulai:'',tglSelesai:'',urgency:'rendah',proyek:'',ket:''},
+      {name:'Batas Material',start:'Belum Start',tglMulai:'',tglSelesai:'',urgency:'tinggi',proyek:'',ket:'Bata + Finishing RAP, tinggal buat format Material'},
+      {name:'Basic Upah Mandor',start:'Done',tglMulai:'',tglSelesai:'',urgency:'rendah',proyek:'',ket:''},
+    ]},
+    {name:'Dovia - Grandwisata',items:[
+      {name:'Batas Besi',start:'Done',tglMulai:'',tglSelesai:'',urgency:'rendah',proyek:'',ket:''},
+      {name:'Batas Material',start:'Belum Start',tglMulai:'',tglSelesai:'',urgency:'sedang',proyek:'',ket:'Bata + Finishing RAP, tinggal buat format Material'},
+      {name:'Basic Upah Mandor',start:'Done',tglMulai:'',tglSelesai:'',urgency:'rendah',proyek:'',ket:''},
+    ]},
+  ]},
+  {name:'SINARMASLAND - BSD',projects:[
+    {name:'Belova - BSD',items:[
+      {name:'Batas Besi',start:'Done',tglMulai:'',tglSelesai:'',urgency:'rendah',proyek:'',ket:''},
+      {name:'Batas Material',start:'Done',tglMulai:'',tglSelesai:'',urgency:'rendah',proyek:'',ket:'RAP Bata +Finishing, Pipa'},
+      {name:'Basic Upah Mandor',start:'Belum Start',tglMulai:'',tglSelesai:'',urgency:'sedang',proyek:'',ket:''},
+    ]},
+    {name:'Elyon - BSD',items:[
+      {name:'Batas Besi',start:'Done',tglMulai:'',tglSelesai:'',urgency:'rendah',proyek:'',ket:'L8'},
+      {name:'Batas Material',start:'Belum Start',tglMulai:'',tglSelesai:'',urgency:'tinggi',proyek:'',ket:'RAP Bata +Finishing, Pipa'},
+      {name:'Basic Upah Mandor',start:'Belum Start',tglMulai:'',tglSelesai:'',urgency:'sedang',proyek:'',ket:''},
+    ]},
+  ]},
+  {name:'JAYA REAL - BINTARO',projects:[
+    {name:'Azzura - Bintaro',items:[
+      {name:'Hitung Eskalasi Kenaikan Beton',start:'Belum Start',tglMulai:'',tglSelesai:'',urgency:'kritis',proyek:'',ket:''},
+    ]},
+    {name:'Aira - Bintaro',items:[
+      {name:'Hitung Eskalasi Kenaikan Beton',start:'Belum Start',tglMulai:'',tglSelesai:'',urgency:'kritis',proyek:'',ket:''},
+    ]},
+  ]},
+]};
+
+// ── PERSIST ───────────────────────────────────────────────────────
+function loadData(){const s=localStorage.getItem('nt_v6');if(s)try{data=JSON.parse(s);}catch(e){}}
+function saveData(){localStorage.setItem('nt_v6',JSON.stringify(data));showToast();updateTS();}
+function showToast(){const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+function updateTS(){const d=new Date();document.getElementById('lastUpdated').textContent='Update '+d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})+', '+d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});}
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function sCls(s){return s==='Done'?'sd':s==='Progress'?'sp':s==='Belum Start'?'sb':'se';}
+function sLbl(s){return s||'Set Status';}
+function today(){return new Date().toISOString().split('T')[0];}
+function diffDays(a,b){return Math.round((new Date(b)-new Date(a))/86400000);}
+function durasiChip(a,b){
+  if(!a||!b)return '<span class="chip-none">—</span>';
+  const d=diffDays(a,b);
+  if(d<0)return '<span class="chip chip-over">Error tgl</span>';
+  return `<span class="chip chip-dur">${d===0?'1 hr':d+' hr'}</span>`;
+}
+function sisaChip(tgl,status){
+  if(!tgl||status==='Done')return '<span class="chip-none">—</span>';
+  const d=diffDays(today(),tgl);
+  if(d<0)return `<span class="chip chip-over pulse-anim">−${Math.abs(d)} hr</span>`;
+  if(d<=3)return `<span class="chip chip-close">${d} hr lagi</span>`;
+  return `<span class="chip chip-ok">${d} hr lagi</span>`;
+}
+
+// Returns highest urgency level (lowest number) across all active (non-Done) items in a project
+function projUrgency(proj){
+  let best=5;
+  proj.items.forEach(i=>{
+    if(i.start==='Done')return;
+    const v=UO[i.urgency||'']??4;
+    if(v<best)best=v;
+  });
+  return best;
+}
+function projUrgencyEmoji(proj){
+  const u=projUrgency(proj);
+  const map={0:'kritis',1:'tinggi',2:'sedang',3:'rendah',4:'',5:''};
+  return UE[map[u]||''];
+}
+function projUrgencyClass(proj){
+  const u=projUrgency(proj);
+  const map={0:'kritis',1:'tinggi',2:'sedang',3:'rendah',4:'',5:''};
+  return PUC[map[u]||'']||'pub-n';
+}
+
+// ── CONFIRM ───────────────────────────────────────────────────────
+let pendingDelete=null;
+function showConfirm({icon='🗑️',title,msg,onOk}){
+  document.getElementById('confirmIcon').textContent=icon;
+  document.getElementById('confirmTitle').textContent=title;
+  document.getElementById('confirmMsg').innerHTML=msg;
+  pendingDelete=onOk;
+  document.getElementById('confirmOverlay').classList.add('active');
+}
+document.getElementById('confirmCancel').addEventListener('click',()=>{document.getElementById('confirmOverlay').classList.remove('active');pendingDelete=null;});
+document.getElementById('confirmOk').addEventListener('click',()=>{if(pendingDelete)pendingDelete();document.getElementById('confirmOverlay').classList.remove('active');pendingDelete=null;});
+document.getElementById('confirmOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('confirmOverlay')){document.getElementById('confirmOverlay').classList.remove('active');pendingDelete=null;}});
+
+// ── STATS ─────────────────────────────────────────────────────────
+function calcStats(){
+  let total=0,done=0,prog=0,belum=0,kritis=0;
+  data.developers.forEach(d=>d.projects.forEach(p=>p.items.forEach(i=>{
+    total++;
+    if(i.start==='Done')done++;
+    else if(i.start==='Progress')prog++;
+    else if(i.start==='Belum Start')belum++;
+    if(i.urgency==='kritis'&&i.start!=='Done')kritis++;
+  })));
+  return{total,done,prog,belum,kritis,empty:total-done-prog-belum};
+}
+
+// ── SUMMARY ───────────────────────────────────────────────────────
+function renderSummary(){
+  const s=calcStats();
+  const projs=data.developers.reduce((a,d)=>a+d.projects.length,0);
+  const pct=s.total?Math.round(s.done/s.total*100):0;
+  document.getElementById('summaryGrid').innerHTML=`
+    <div class="sum-card" style="--ac:#3B6CF4"><div class="sum-icon" style="background:#EEF2FF">📋</div><div class="sum-label">Total Item</div><div class="sum-value" style="color:var(--text-h)">${s.total}</div><div class="sum-desc">${projs} proyek · ${data.developers.length} dev</div></div>
+    <div class="sum-card" style="--ac:#12B76A"><div class="sum-icon" style="background:#E6F9F0">✅</div><div class="sum-label">Selesai</div><div class="sum-value" style="color:#0A7A4E">${s.done}</div><div class="sum-desc">${pct}% dari total</div></div>
+    <div class="sum-card" style="--ac:#F59E0B"><div class="sum-icon" style="background:#FFF8E6">⏳</div><div class="sum-label">On Progress</div><div class="sum-value" style="color:#926A00">${s.prog}</div><div class="sum-desc">${s.empty} tanpa status</div></div>
+    <div class="sum-card" style="--ac:#EF4444"><div class="sum-icon" style="background:#FEF0F0">🔴</div><div class="sum-label">Belum Mulai</div><div class="sum-value" style="color:#B02A2A">${s.belum}</div><div class="sum-desc">${s.total-s.done} belum selesai</div></div>
+    <div class="sum-card" style="--ac:#C0192A"><div class="sum-icon" style="background:#FFF0F0">🚨</div><div class="sum-label">Kritis Aktif</div><div class="sum-value" style="color:#C0192A">${s.kritis}</div><div class="sum-desc">perlu tindakan segera</div></div>`;
+}
+
+// ── ITEM SORT ─────────────────────────────────────────────────────
+let currentSort='default';
+document.querySelectorAll('.sort-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');currentSort=btn.dataset.sort;renderSections();
+  });
+});
+function sortItems(items){
+  const arr=items.map((it,i)=>({...it,_i:i}));
+  if(currentSort==='urgency') arr.sort((a,b)=>(UO[a.urgency||'']??4)-(UO[b.urgency||'']??4));
+  else if(currentSort==='deadline') arr.sort((a,b)=>{const da=a.tglSelesai||'9999',db=b.tglSelesai||'9999';return da<db?-1:da>db?1:0;});
+  else if(currentSort==='status'){const so={'Done':3,'Progress':1,'Belum Start':2,'':4};arr.sort((a,b)=>(so[a.start]||4)-(so[b.start]||4));}
+  return arr;
+}
+
+// ── AUTO-SORT PROJECTS BY URGENCY ─────────────────────────────────
+function autoSortProjects(di){
+  const dev=data.developers[di];
+  dev.projects.sort((a,b)=>projUrgency(a)-projUrgency(b));
+  saveData();renderSections();
+  // highlight first few rows briefly
+  setTimeout(()=>{
+    const sec=document.getElementById('b'+di);
+    if(sec){
+      sec.querySelectorAll('.proj-group').forEach((g,i)=>{
+        setTimeout(()=>{g.classList.add('just-sorted');setTimeout(()=>g.classList.remove('just-sorted'),900);},i*60);
+      });
+    }
+  },50);
+}
+
+// ── MOVE PROJECT UP / DOWN ─────────────────────────────────────────
+function moveProject(di,pi,dir){
+  const projs=data.developers[di].projects;
+  const newPi=pi+dir;
+  if(newPi<0||newPi>=projs.length)return;
+  [projs[pi],projs[newPi]]=[projs[newPi],projs[pi]];
+  saveData();renderSections();
+}
+
+// ── DRAG-AND-DROP (projects within a developer) ────────────────────
+let dragState=null;
+
+function setupDragHandlers(grpEl,di,pi){
+  const handle=grpEl.querySelector('.drag-handle');
+  if(!handle)return;
+
+  handle.addEventListener('mousedown',e=>{
+    e.preventDefault();
+    dragState={di,pi,startY:e.clientY,grpEl,clone:null,placeholder:null};
+    startDrag(e);
+  });
+}
+
+function startDrag(e){
+  const{grpEl,di,pi}=dragState;
+  const rect=grpEl.getBoundingClientRect();
+
+  // Clone for visual ghost
+  const clone=grpEl.cloneNode(true);
+  clone.style.cssText=`
+    position:fixed;top:${rect.top}px;left:${rect.left}px;
+    width:${rect.width}px;z-index:500;
+    opacity:.88;box-shadow:0 8px 32px rgba(20,30,80,.22);
+    border-radius:8px;pointer-events:none;
+    transition:none;background:#fff;`;
+  document.body.appendChild(clone);
+  dragState.clone=clone;
+  dragState.offsetY=e.clientY-rect.top;
+  dragState.currentPi=pi;
+
+  grpEl.classList.add('dragging');
+
+  document.addEventListener('mousemove',onDragMove);
+  document.addEventListener('mouseup',onDragEnd);
+}
+
+function onDragMove(e){
+  if(!dragState||!dragState.clone)return;
+  const{clone,grpEl,di,offsetY}=dragState;
+  const y=e.clientY-offsetY;
+  clone.style.top=y+'px';
+
+  // Find sibling projects to determine drop target
+  const body=document.getElementById('b'+di);
+  if(!body)return;
+  const siblings=[...body.querySelectorAll('.proj-group:not(.dragging)')];
+
+  // Clear indicators
+  siblings.forEach(s=>{s.classList.remove('drag-over-top','drag-over-bottom');});
+
+  let targetPi=null,insertBefore=true;
+  for(let i=0;i<siblings.length;i++){
+    const sr=siblings[i].getBoundingClientRect();
+    const mid=sr.top+sr.height/2;
+    if(e.clientY<mid){
+      siblings[i].classList.add('drag-over-top');
+      targetPi=parseInt(siblings[i].dataset.pi);
+      insertBefore=true;
+      break;
+    } else if(i===siblings.length-1){
+      siblings[i].classList.add('drag-over-bottom');
+      targetPi=parseInt(siblings[i].dataset.pi);
+      insertBefore=false;
+    }
+  }
+  dragState.targetPi=targetPi;
+  dragState.insertBefore=insertBefore;
+}
+
+function onDragEnd(e){
+  if(!dragState)return;
+  const{di,pi,clone,grpEl,targetPi,insertBefore}=dragState;
+
+  // Clean up clone
+  if(clone)clone.remove();
+  grpEl.classList.remove('dragging');
+
+  // Clear indicators
+  const body=document.getElementById('b'+di);
+  if(body)body.querySelectorAll('.proj-group').forEach(g=>g.classList.remove('drag-over-top','drag-over-bottom'));
+
+  document.removeEventListener('mousemove',onDragMove);
+  document.removeEventListener('mouseup',onDragEnd);
+
+  // Reorder if valid target
+  if(targetPi!==null&&targetPi!==pi){
+    const projs=data.developers[di].projects;
+    const item=projs.splice(pi,1)[0];
+    let insertIdx=targetPi;
+    if(targetPi>pi)insertIdx--;
+    if(!insertBefore)insertIdx++;
+    insertIdx=Math.max(0,Math.min(projs.length,insertIdx));
+    projs.splice(insertIdx,0,item);
+    saveData();renderSections();
+  }
+  dragState=null;
+}
+
+// ── DEV URGENCY ──────────────────────────────────────────────────
+function devUrgency(dev){
+  let best=5;
+  dev.projects.forEach(p=>p.items.forEach(i=>{
+    if(i.start==='Done')return;
+    const v=UO[i.urgency||'']??4;
+    if(v<best)best=v;
+  }));
+  return best;
+}
+
+// ── RENDER SECTIONS ───────────────────────────────────────────────
+function renderSections(){
+  const wrap=document.getElementById('devSections');wrap.innerHTML='';
+
+  data.developers.forEach((dev,di)=>{
+    // Support both legacy DEV_COLORS map and per-dev color stored in data
+    const color=dev.color||DEV_COLORS[dev.name]||PALETTE_NAMES[di%PALETTE_NAMES.length];
+    // Keep DEV_COLORS in sync for consistent rendering
+    DEV_COLORS[dev.name]=color;
+
+    let dd=0,dt=0;
+    dev.projects.forEach(p=>p.items.forEach(i=>{dt++;if(i.start==='Done')dd++;}));
+    const kritisCount=dev.projects.reduce((acc,p)=>acc+p.items.filter(i=>i.urgency==='kritis'&&i.start!=='Done').length,0);
+    const devUrg=devUrgency(dev);
+    const devUrgLabel={0:'🔴 Kritis',1:'🟠 Tinggi',2:'🟡 Sedang',3:'🟢 Rendah',4:'',5:''}[devUrg]||'';
+
+    const sec=document.createElement('div');sec.className='dev-section';
+
+    // Header
+    const hdr=document.createElement('div');hdr.className='dev-header';
+    hdr.innerHTML=`
+      <div class="dev-left">
+        <div class="dev-stripe" style="background:${color}"></div>
+        <div>
+          <div class="dev-name" style="display:flex;align-items:center;gap:8px;">
+            <span id="devname-${di}">${dev.name}</span>
+          </div>
+        </div>
+      </div>
+      <div class="dev-meta">
+        <div class="dpill gd">${dd}/${dt} Done</div>
+        <div class="dpill">${dev.projects.length} Proyek</div>
+        ${devUrgLabel?`<div class="dpill" style="background:var(--uk-bg);color:var(--uk-fg);">${devUrgLabel}</div>`:''}
+        ${kritisCount>0?`<div class="dpill kritis">🚨 ${kritisCount} Kritis</div>`:''}
+        <div class="chevron open" id="chev-${di}">▼</div>
+      </div>`;
+    hdr.addEventListener('click',()=>{
+      document.getElementById('b'+di).classList.toggle('collapsed');
+      document.getElementById('chev-'+di).classList.toggle('open');
+    });
+    sec.appendChild(hdr);
+
+    // Body
+    const body=document.createElement('div');body.id='b'+di;
+
+    // Dev name edit + delete row
+    const devEditRow=document.createElement('div');
+    devEditRow.style.cssText='display:flex;align-items:center;gap:8px;padding:8px 16px;background:#F9FAFF;border-bottom:1px solid var(--border);flex-wrap:wrap;';
+    devEditRow.innerHTML=`<span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;">Nama Developer:</span>`;
+    const devNameIn=document.createElement('input');
+    devNameIn.type='text';devNameIn.value=dev.name;
+    devNameIn.style.cssText='flex:1;min-width:140px;padding:4px 10px;border:1.5px solid var(--border2);border-radius:7px;font-size:13px;font-weight:700;font-family:\'Plus Jakarta Sans\',sans-serif;color:var(--text-h);outline:none;transition:border-color .15s;';
+    devNameIn.addEventListener('focus',()=>devNameIn.style.borderColor='var(--blue)');
+    devNameIn.addEventListener('blur',()=>{devNameIn.style.borderColor='var(--border2)';});
+    devNameIn.addEventListener('change',e=>{
+      const oldName=dev.name;
+      dev.name=e.target.value;
+      // migrate color
+      DEV_COLORS[dev.name]=DEV_COLORS[oldName]||color;
+      saveData();renderAll();
+    });
+    devEditRow.appendChild(devNameIn);
+
+    // Color dots (mini palette)
+    const miniPalette=document.createElement('div');
+    miniPalette.style.cssText='display:flex;gap:5px;align-items:center;';
+    PALETTE_NAMES.forEach(c=>{
+      const dot=document.createElement('div');
+      dot.style.cssText=`width:18px;height:18px;border-radius:50%;background:${c};cursor:pointer;border:2px solid ${c===color?'#333':'transparent'};transition:transform .12s;flex-shrink:0;`;
+      dot.title='Ganti warna';
+      dot.addEventListener('click',e=>{
+        e.stopPropagation();
+        dev.color=c;DEV_COLORS[dev.name]=c;
+        saveData();renderAll();
+      });
+      miniPalette.appendChild(dot);
+    });
+    devEditRow.appendChild(miniPalette);
+
+    // Delete developer
+    const delDevBtn=document.createElement('button');
+    delDevBtn.style.cssText='padding:5px 12px;border-radius:8px;border:1.5px solid #FECACA;background:var(--belum-bg);color:var(--belum-fg);font-size:12px;font-weight:700;cursor:pointer;font-family:\'Plus Jakarta Sans\',sans-serif;white-space:nowrap;transition:all .15s;flex-shrink:0;';
+    delDevBtn.innerHTML='🗑️ Hapus Developer';
+    delDevBtn.addEventListener('click',e=>{
+      e.stopPropagation();
+      showConfirm({icon:'🏢',title:'Hapus Developer?',
+        msg:`Developer <strong>${dev.name}</strong> beserta <strong>${dev.projects.length} proyek</strong> dan semua item di dalamnya akan dihapus permanen.`,
+        onOk:()=>{data.developers.splice(di,1);saveData();renderAll();}
+      });
+    });
+    devEditRow.appendChild(delDevBtn);
+    body.appendChild(devEditRow);
+
+    // Auto-sort banner
+    const banner=document.createElement('div');
+    banner.style.cssText='display:flex;align-items:center;gap:10px;padding:8px 16px;background:linear-gradient(90deg,#FFF8F0,#FFF0F0);border-bottom:1px solid #FFD8A8;flex-wrap:wrap;';
+    banner.innerHTML=`
+      <span style="font-size:12px;color:#9A4500;font-weight:600;flex:1;min-width:180px;">
+        ⠿ Drag proyek · <span style="color:var(--text-muted);font-weight:400;">↑↓ pindah satu posisi · atau</span>
+      </span>
+      <button class="auto-sort-btn" style="display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:99px;border:1.5px solid #C0192A;background:#C0192A;color:#fff;font-size:11.5px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;transition:all .15s;" data-di="${di}">
+        🔴 Auto Urutkan by Urgency
+      </button>`;
+    banner.querySelector('.auto-sort-btn').addEventListener('click',e=>{
+      e.stopPropagation();autoSortProjects(di);
+    });
+    body.appendChild(banner);
+
+    // Table scroll
+    const scrollWrap=document.createElement('div');scrollWrap.className='table-scroll';
+    const tableInner=document.createElement('div');tableInner.className='table-inner';
+
+    // Table header
+    const thr=document.createElement('div');thr.className='thr';
+    thr.innerHTML='<div class="th" title="Urgency item">!</div><div></div><div class="th">Item Pekerjaan</div><div class="th">Status</div><div class="th">Tgl Mulai</div><div class="th">Tgl Selesai</div><div class="th">Durasi</div><div class="th">Sisa Hari</div><div class="th">Proyek</div><div class="th">Keterangan</div><div></div><div></div><div></div><div></div>';
+    tableInner.appendChild(thr);
+
+    dev.projects.forEach((proj,pi)=>{
+      const grp=document.createElement('div');
+      grp.className='proj-group';
+      grp.dataset.di=di;grp.dataset.pi=pi;
+
+      // ── Project name row ──
+      const prow=document.createElement('div');prow.className='proj-name-row';
+
+      const dh=document.createElement('div');dh.className='drag-handle';dh.title='Drag untuk pindah posisi';dh.innerHTML='⠿';
+      prow.appendChild(dh);
+
+      const pub=document.createElement('span');
+      pub.className='proj-ub '+projUrgencyClass(proj);
+      pub.title='Urgency tertinggi proyek ini';
+      pub.textContent=projUrgencyEmoji(proj);
+      prow.appendChild(pub);
+
+      const pnum=document.createElement('span');pnum.className='proj-num';pnum.textContent=pi+1;
+      prow.appendChild(pnum);
+
+      const pin=document.createElement('input');
+      pin.type='text';pin.className='ed ed-proj';pin.value=proj.name;
+      pin.addEventListener('change',e=>{proj.name=e.target.value;saveData();renderSummary();});
+      prow.appendChild(pin);
+
+      const countSpan=document.createElement('span');
+      countSpan.style.cssText='font-size:10.5px;font-weight:600;color:var(--text-muted);background:var(--border);padding:2px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;';
+      countSpan.textContent=proj.items.length+' item';
+      prow.appendChild(countSpan);
+
+      const mvUp=document.createElement('button');mvUp.className='mv-btn';mvUp.innerHTML='↑';mvUp.title='Pindah ke atas';
+      if(pi===0)mvUp.disabled=true;
+      mvUp.addEventListener('click',e=>{e.stopPropagation();moveProject(di,pi,-1);});
+      prow.appendChild(mvUp);
+
+      const mvDn=document.createElement('button');mvDn.className='mv-btn';mvDn.innerHTML='↓';mvDn.title='Pindah ke bawah';
+      if(pi===dev.projects.length-1)mvDn.disabled=true;
+      mvDn.addEventListener('click',e=>{e.stopPropagation();moveProject(di,pi,1);});
+      prow.appendChild(mvDn);
+
+      const pDelBtn=document.createElement('button');pDelBtn.className='proj-del-btn';pDelBtn.innerHTML='🗑️';pDelBtn.title='Hapus proyek';
+      pDelBtn.addEventListener('click',e=>{
+        e.stopPropagation();
+        showConfirm({icon:'🗑️',title:'Hapus Proyek?',
+          msg:`Proyek <strong>${proj.name}</strong> dan semua itemnya (${proj.items.length} item) akan dihapus permanen.`,
+          onOk:()=>{dev.projects.splice(pi,1);saveData();renderAll();}
+        });
+      });
+      prow.appendChild(pDelBtn);
+      grp.appendChild(prow);
+
+      // ── Item rows ──
+      sortItems(proj.items).forEach(item=>{
+        const ii=item._i;
+        const row=document.createElement('div');
+        row.className='item-row '+(RC[item.urgency||'']||'');
+
+        const ubw=document.createElement('div');
+        const ub=document.createElement('span');ub.className='ub '+(UC[item.urgency||'']||'ub-n');
+        ub.textContent=UE[item.urgency||''];ub.title='Klik ubah urgency';
+        ub.dataset.di=di;ub.dataset.pi=pi;ub.dataset.ii=ii;
+        ub.addEventListener('click',openUMenu);ubw.appendChild(ub);row.appendChild(ubw);
+
+        const dash=document.createElement('div');dash.className='item-dash';dash.textContent='—';row.appendChild(dash);
+
+        const ni=document.createElement('input');ni.type='text';ni.className='ed ed-item';ni.value=item.name;
+        ni.addEventListener('change',e=>{proj.items[ii].name=e.target.value;saveData();});row.appendChild(ni);
+
+        const sw=document.createElement('div');sw.style.display='flex';sw.style.alignItems='center';
+        const badge=document.createElement('span');badge.className='sbadge '+sCls(item.start);badge.textContent=sLbl(item.start);
+        badge.dataset.di=di;badge.dataset.pi=pi;badge.dataset.ii=ii;
+        badge.addEventListener('click',openSMenu);sw.appendChild(badge);row.appendChild(sw);
+
+        const mi=document.createElement('input');mi.type='date';mi.className='di';mi.value=item.tglMulai||'';
+        mi.addEventListener('change',e=>{proj.items[ii].tglMulai=e.target.value;saveData();renderSections();});row.appendChild(mi);
+
+        const si=document.createElement('input');si.type='date';si.className='di';si.value=item.tglSelesai||'';
+        si.addEventListener('change',e=>{proj.items[ii].tglSelesai=e.target.value;saveData();renderSections();});row.appendChild(si);
+
+        const ddiv=document.createElement('div');ddiv.innerHTML=durasiChip(item.tglMulai,item.tglSelesai);row.appendChild(ddiv);
+        const sdiv=document.createElement('div');sdiv.innerHTML=sisaChip(item.tglSelesai,item.start);row.appendChild(sdiv);
+
+        const proi=document.createElement('input');proi.type='text';proi.className='ed';proi.placeholder='—';proi.value=item.proyek||'';
+        proi.addEventListener('change',e=>{proj.items[ii].proyek=e.target.value;saveData();});row.appendChild(proi);
+
+        const ki=document.createElement('input');ki.type='text';
+        ki.className='ed'+(item.ket?' ed-ket':'');ki.placeholder='Catatan...';ki.value=item.ket||'';
+        ki.addEventListener('change',e=>{proj.items[ii].ket=e.target.value;ki.className='ed'+(e.target.value?' ed-ket':'');saveData();});row.appendChild(ki);
+
+        row.appendChild(document.createElement('div'));
+        row.appendChild(document.createElement('div'));
+        row.appendChild(document.createElement('div'));
+
+        const db=document.createElement('button');db.className='del-btn';db.innerHTML='×';db.title='Hapus item';
+        db.addEventListener('click',()=>{
+          showConfirm({icon:'🗑️',title:'Hapus Item?',
+            msg:`Item <strong>${item.name}</strong> akan dihapus permanen.`,
+            onOk:()=>{proj.items.splice(ii,1);saveData();renderAll();}
+          });
+        });
+        row.appendChild(db);
+        grp.appendChild(row);
+      });
+
+      const addI=document.createElement('button');addI.className='add-item-btn';
+      addI.innerHTML='＋ &nbsp;Tambah item baru';
+      addI.addEventListener('click',()=>{
+        proj.items.push({name:'Item Baru',start:'',tglMulai:'',tglSelesai:'',urgency:'',proyek:'',ket:''});
+        saveData();renderAll();
+      });
+      grp.appendChild(addI);
+      tableInner.appendChild(grp);
+      setupDragHandlers(grp,di,pi);
+    });
+
+    scrollWrap.appendChild(tableInner);
+    body.appendChild(scrollWrap);
+
+    const addPRow=document.createElement('div');addPRow.className='add-proj-row';
+    const addP=document.createElement('button');addP.className='add-proj-btn';
+    addP.innerHTML='＋ &nbsp;Tambah proyek baru';
+    addP.addEventListener('click',()=>{
+      dev.projects.push({name:'Proyek Baru',items:[{name:'Item Baru',start:'',tglMulai:'',tglSelesai:'',urgency:'',proyek:'',ket:''}]});
+      saveData();renderAll();
+    });
+    addPRow.appendChild(addP);
+    body.appendChild(addPRow);
+
+    sec.appendChild(body);
+    wrap.appendChild(sec);
+  });
+}
+
+// ── MENUS ─────────────────────────────────────────────────────────
+let activeSBadge=null,activeUBadge=null;
+function posMenu(menu,el){
+  const r=el.getBoundingClientRect();
+  let top=r.bottom+5,left=r.left;
+  if(left+180>window.innerWidth)left=window.innerWidth-186;
+  if(top+170>window.innerHeight)top=r.top-175;
+  menu.style.top=top+'px';menu.style.left=left+'px';
+}
+function closeMenus(){
+  document.getElementById('statusMenu').classList.remove('active');
+  document.getElementById('urgencyMenu').classList.remove('active');
+}
+function openSMenu(e){
+  activeSBadge=e.currentTarget;closeMenus();
+  const m=document.getElementById('statusMenu');posMenu(m,e.currentTarget);m.classList.add('active');
+  e.stopPropagation();
+}
+document.getElementById('statusMenu').querySelectorAll('.mopt').forEach(o=>{
+  o.addEventListener('click',()=>{
+    if(!activeSBadge)return;
+    const{di,pi,ii}=activeSBadge.dataset;
+    data.developers[di].projects[pi].items[ii].start=o.dataset.val;
+    saveData();renderAll();closeMenus();
+  });
+});
+function openUMenu(e){
+  activeUBadge=e.currentTarget;closeMenus();
+  const m=document.getElementById('urgencyMenu');posMenu(m,e.currentTarget);m.classList.add('active');
+  e.stopPropagation();
+}
+document.getElementById('urgencyMenu').querySelectorAll('.mopt').forEach(o=>{
+  o.addEventListener('click',()=>{
+    if(!activeUBadge)return;
+    const{di,pi,ii}=activeUBadge.dataset;
+    data.developers[di].projects[pi].items[ii].urgency=o.dataset.val;
+    saveData();renderAll();closeMenus();
+  });
+});
+document.addEventListener('click',closeMenus);
+
+// ── INIT ──────────────────────────────────────────────────────────
+let selectedColor = PALETTE_NAMES[0];
+
+// Build color picker
+const cpEl = document.getElementById('colorPicker');
+PALETTE_NAMES.forEach(c=>{
+  const dot = document.createElement('div');
+  dot.style.cssText=`width:26px;height:26px;border-radius:50%;background:${c};cursor:pointer;border:2.5px solid transparent;transition:transform .15s,border-color .15s;flex-shrink:0;`;
+  dot.title=c;
+  dot.dataset.color=c;
+  dot.addEventListener('click',()=>{
+    cpEl.querySelectorAll('div').forEach(d=>d.style.borderColor='transparent');
+    dot.style.borderColor='#fff';
+    dot.style.outline='2px solid '+c;
+    selectedColor=c;
+  });
+  if(c===selectedColor){dot.style.borderColor='#fff';dot.style.outline='2px solid '+c;}
+  cpEl.appendChild(dot);
+});
+
+// Focus on input when modal opens
+function openAddDevModal(){
+  selectedColor=PALETTE_NAMES[0];
+  cpEl.querySelectorAll('div').forEach((d,i)=>{
+    d.style.borderColor='transparent';d.style.outline='none';
+    if(i===0){d.style.borderColor='#fff';d.style.outline='2px solid '+PALETTE_NAMES[0];}
+  });
+  document.getElementById('newDevName').value='';
+  document.getElementById('addDevOverlay').classList.add('active');
+  setTimeout(()=>document.getElementById('newDevName').focus(),80);
+}
+document.getElementById('addDevBtn').addEventListener('click',openAddDevModal);
+document.getElementById('addDevCancel').addEventListener('click',()=>document.getElementById('addDevOverlay').classList.remove('active'));
+document.getElementById('addDevOverlay').addEventListener('click',e=>{if(e.target===document.getElementById('addDevOverlay'))document.getElementById('addDevOverlay').classList.remove('active');});
+document.getElementById('newDevName').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('addDevOk').click();});
+document.getElementById('addDevOk').addEventListener('click',()=>{
+  const name=document.getElementById('newDevName').value.trim();
+  if(!name){document.getElementById('newDevName').style.borderColor='#EF4444';return;}
+  document.getElementById('newDevName').style.borderColor='';
+  // Register color for this dev
+  DEV_COLORS[name]=selectedColor;
+  data.developers.push({name,color:selectedColor,projects:[
+    {name:'Proyek Baru',items:[{name:'Item Baru',start:'',tglMulai:'',tglSelesai:'',urgency:'',proyek:'',ket:''}]}
+  ]});
+  saveData();renderAll();
+  document.getElementById('addDevOverlay').classList.remove('active');
+});
+
+document.getElementById('globalAutoSortBtn').addEventListener('click',()=>{
+  // Sort all developers by urgency (kritis first)
+  data.developers.sort((a,b)=>devUrgency(a)-devUrgency(b));
+  // Also sort projects within each developer
+  data.developers.forEach((_,di)=>{
+    data.developers[di].projects.sort((a,b)=>projUrgency(a)-projUrgency(b));
+  });
+  saveData();renderAll();
+  // Flash highlight all section headers
+  setTimeout(()=>{
+    document.querySelectorAll('.dev-section').forEach((s,i)=>{
+      setTimeout(()=>{
+        s.style.transition='box-shadow .3s,outline .3s';
+        s.style.outline='2px solid #3B6CF4';
+        s.style.outlineOffset='2px';
+        setTimeout(()=>{s.style.outline='none';},700);
+      },i*80);
+    });
+  },60);
+});
+
+function renderAll(){renderSummary();renderSections();}
+loadData();renderAll();
+</script>
+
+<!-- ══════════════════════════════════════════════════════
+     AI PROJECT SUMMARY SECTION
+══════════════════════════════════════════════════════ -->
+<div id="aiSummarySection" style="margin-top:32px;">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
+    <div>
+      <div style="display:inline-flex;align-items:center;gap:7px;background:#EEF2FF;border:1.5px solid #C7D2FE;padding:3px 12px;border-radius:99px;margin-bottom:8px;">
+        <span style="font-size:13px;">✨</span>
+        <span style="font-size:10px;font-weight:700;color:#3730A3;letter-spacing:1.5px;text-transform:uppercase;">AI Analysis</span>
+      </div>
+      <div style="font-size:22px;font-weight:800;color:#161929;letter-spacing:-.4px;font-family:'Plus Jakarta Sans',sans-serif;">Project Summary & Rekomendasi</div>
+      <div style="font-size:12px;color:#9296B0;margin-top:4px;font-family:'Plus Jakarta Sans',sans-serif;">Analisis otomatis berdasarkan data proyek · Klik Generate untuk memperbarui</div>
+    </div>
+    <button id="generateAiBtn" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:99px;border:none;background:linear-gradient(135deg,#3B6CF4,#7C4DDB);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 4px 14px rgba(59,108,244,.3);transition:all .2s;white-space:nowrap;">
+      ✨ Generate AI Summary
+    </button>
+  </div>
+
+  <!-- API Key Input -->
+  <div id="apiKeyRow" style="display:flex;align-items:center;gap:10px;background:#FAFBFF;border:1.5px solid #E2E5EF;border-radius:12px;padding:12px 16px;margin-bottom:14px;flex-wrap:wrap;">
+    <span style="font-size:12px;font-weight:700;color:#585C80;white-space:nowrap;font-family:'Plus Jakarta Sans',sans-serif;">🔑 Anthropic API Key</span>
+    <input id="apiKeyInput" type="password" placeholder="sk-ant-api03-..." style="flex:1;min-width:220px;padding:7px 12px;border:1.5px solid #CDD2E8;border-radius:8px;font-size:12.5px;font-family:'JetBrains Mono',monospace;color:#161929;outline:none;transition:border-color .15s;background:#fff;" />
+    <button id="apiKeySaveBtn" onclick="saveApiKey()" style="padding:7px 16px;border-radius:8px;border:1.5px solid #3B6CF4;background:#EEF2FF;color:#3B6CF4;font-size:12px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap;transition:all .15s;">Simpan</button>
+    <a href="https://console.anthropic.com/settings/keys" target="_blank" style="font-size:11.5px;color:#9296B0;text-decoration:none;white-space:nowrap;font-family:'Plus Jakarta Sans',sans-serif;">Belum punya? Daftar gratis →</a>
+  </div>
+  <div id="apiKeyStatus" style="display:none;font-size:12px;margin-bottom:12px;padding:8px 14px;border-radius:8px;font-family:'Plus Jakarta Sans',sans-serif;"></div>
+
+  <!-- AI Output Container -->
+  <div id="aiOutput" style="background:#FFFFFF;border:1px solid #E2E5EF;border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(20,30,80,.07);">
+
+    <!-- Empty state -->
+    <div id="aiEmptyState" style="padding:48px 32px;text-align:center;">
+      <div style="font-size:40px;margin-bottom:14px;">🤖</div>
+      <div style="font-size:15px;font-weight:700;color:#2B2F50;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif;">Belum ada analisis</div>
+      <div style="font-size:13px;color:#9296B0;font-family:'Plus Jakarta Sans',sans-serif;">Klik tombol <strong style="color:#3B6CF4;">Generate AI Summary</strong> di atas untuk mendapatkan analisis lengkap proyek Anda — overview, progress, kritik, dan rekomendasi.</div>
+    </div>
+
+    <!-- Loading state (hidden by default) -->
+    <div id="aiLoadingState" style="display:none;padding:48px 32px;text-align:center;">
+      <div id="aiLoadingDots" style="display:flex;justify-content:center;gap:8px;margin-bottom:18px;">
+        <div class="ldot" style="width:10px;height:10px;border-radius:50%;background:#3B6CF4;animation:dotPulse 1.4s ease-in-out infinite;"></div>
+        <div class="ldot" style="width:10px;height:10px;border-radius:50%;background:#7C4DDB;animation:dotPulse 1.4s ease-in-out .2s infinite;"></div>
+        <div class="ldot" style="width:10px;height:10px;border-radius:50%;background:#0FA877;animation:dotPulse 1.4s ease-in-out .4s infinite;"></div>
+      </div>
+      <div id="aiLoadingMsg" style="font-size:13px;color:#585C80;font-family:'Plus Jakarta Sans',sans-serif;font-weight:600;">Menganalisis data proyek...</div>
+    </div>
+
+    <!-- Result state (hidden by default) -->
+    <div id="aiResultState" style="display:none;">
+
+      <!-- Top meta bar -->
+      <div id="aiMetaBar" style="display:flex;align-items:center;gap:10px;padding:12px 20px;background:#F5F6FC;border-bottom:1px solid #E2E5EF;flex-wrap:wrap;"></div>
+
+      <!-- Scrollable content -->
+      <div id="aiContent" style="padding:24px 28px;"></div>
+
+      <!-- Footer -->
+      <div style="padding:12px 20px;border-top:1px solid #E2E5EF;background:#FAFBFF;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span id="aiTimestamp" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#9296B0;"></span>
+        <button onclick="generateSummary()" style="display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:99px;border:1.5px solid #CDD2E8;background:#fff;color:#585C80;font-size:11.5px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .15s;">↺ Perbarui Analisis</button>
+      </div>
+    </div>
+
+    <!-- Error state (hidden by default) -->
+    <div id="aiErrorState" style="display:none;padding:32px;text-align:center;">
+      <div style="font-size:32px;margin-bottom:12px;">⚠️</div>
+      <div style="font-size:14px;font-weight:700;color:#B02A2A;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif;">Gagal mendapatkan analisis</div>
+      <div id="aiErrorMsg" style="font-size:12.5px;color:#585C80;margin-bottom:16px;font-family:'Plus Jakarta Sans',sans-serif;"></div>
+      <button onclick="generateSummary()" style="padding:7px 20px;border-radius:99px;border:1.5px solid #CDD2E8;background:#fff;color:#585C80;font-size:12px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;">Coba Lagi</button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes dotPulse{0%,80%,100%{transform:scale(.6);opacity:.4;}40%{transform:scale(1);opacity:1;}}
+.ai-section-card{background:#fff;border:1px solid #E2E5EF;border-radius:12px;padding:20px 22px;margin-bottom:16px;}
+.ai-section-card:last-child{margin-bottom:0;}
+.ai-section-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#161929;margin-bottom:14px;font-family:'Plus Jakarta Sans',sans-serif;}
+.ai-section-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.ai-bullet{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid #F0F2F8;font-family:'Plus Jakarta Sans',sans-serif;}
+.ai-bullet:last-child{border-bottom:none;padding-bottom:0;}
+.ai-bullet-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.ai-bullet-text{font-size:13px;color:#2B2F50;line-height:1.55;}
+.ai-bullet-text strong{color:#161929;font-weight:700;}
+.ai-prog-bar-wrap{margin:8px 0;}
+.ai-prog-label{display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:5px;font-family:'Plus Jakarta Sans',sans-serif;}
+.ai-prog-track{height:7px;background:#E2E5EF;border-radius:99px;overflow:hidden;}
+.ai-prog-fill{height:100%;border-radius:99px;transition:width .8s ease;}
+.ai-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.ai-stat-mini{background:#F5F6FC;border-radius:9px;padding:12px 14px;text-align:center;}
+.ai-stat-mini-val{font-size:24px;font-weight:800;line-height:1;font-family:'Plus Jakarta Sans',sans-serif;}
+.ai-stat-mini-lbl{font-size:10.5px;color:#9296B0;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;font-family:'Plus Jakarta Sans',sans-serif;}
+@media(max-width:600px){.ai-grid-2{grid-template-columns:1fr;}}
+</style>
+
+<script>
+(function(){
+
+// ── Build project context from current data ────────────────────
+function buildContext(){
+  const s=calcStats();
+  const pct=s.total?Math.round(s.done/s.total*100):0;
+
+  let devSummaries=[];
+  data.developers.forEach(dev=>{
+    let devDone=0,devTotal=0,devKritis=0,devBelum=0,devProg=0;
+    let projList=[];
+    dev.projects.forEach(proj=>{
+      let pDone=0,pTotal=0,highestUrg='';let urgO=5;
+      proj.items.forEach(i=>{
+        pTotal++;devTotal++;
+        if(i.start==='Done'){pDone++;devDone++;}
+        else if(i.start==='Progress')devProg++;
+        else if(i.start==='Belum Start')devBelum++;
+        if(i.urgency==='kritis'&&i.start!=='Done')devKritis++;
+        const v=UO[i.urgency||'']??4;
+        if(v<urgO){urgO=v;highestUrg=i.urgency;}
+      });
+      const kets=proj.items.filter(i=>i.ket).map(i=>i.name+': '+i.ket).join('; ');
+      projList.push(`  - ${proj.name} (${pDone}/${pTotal} done, urgency tertinggi: ${highestUrg||'belum diset'}${kets?', catatan: '+kets:''})`);
+    });
+    devSummaries.push(`Developer: ${dev.name}\n  Progress: ${devDone}/${devTotal} item selesai\n  Kritis aktif: ${devKritis}, Belum mulai: ${devBelum}, On progress: ${devProg}\n  Proyek:\n${projList.join('\n')}`);
+  });
+
+  return `DATA DASHBOARD NON-TENDER:
+
+STATISTIK KESELURUHAN:
+- Total item pekerjaan: ${s.total}
+- Selesai (Done): ${s.done} (${pct}%)
+- On Progress: ${s.prog}
+- Belum Mulai: ${s.belum}
+- Item tanpa status: ${s.empty}
+- Item kritis aktif: ${s.kritis}
+- Total developer: ${data.developers.length}
+- Total proyek: ${data.developers.reduce((a,d)=>a+d.projects.length,0)}
+
+DETAIL PER DEVELOPER:
+${devSummaries.join('\n\n')}`;
+}
+
+// ── Show/hide states ────────────────────────────────────────────
+function showState(state){
+  ['Empty','Loading','Result','Error'].forEach(s=>{
+    const el=document.getElementById('ai'+s+'State');
+    if(el)el.style.display=(s===state?'':'none');
+  });
+}
+
+// ── API Key management ─────────────────────────────────────────
+function loadApiKey(){
+  const k = localStorage.getItem('nt_apikey') || '';
+  const inp = document.getElementById('apiKeyInput');
+  if(inp && k) inp.value = k;
+  updateApiKeyStatus(k);
+  return k;
+}
+function updateApiKeyStatus(k){
+  const el = document.getElementById('apiKeyStatus');
+  if(!el) return;
+  if(k && k.startsWith('sk-ant')){
+    el.style.display='block';
+    el.style.background='#E6F9F0';el.style.color='#0A7A4E';el.style.border='1.5px solid #A7F0C4';
+    el.textContent='✅ API Key tersimpan — siap generate analisis';
+  } else if(k) {
+    el.style.display='block';
+    el.style.background='#FEF0F0';el.style.color='#B02A2A';el.style.border='1.5px solid #FFCDD2';
+    el.textContent='⚠️ Format API Key tidak valid. Pastikan dimulai dengan sk-ant-...';
+  } else {
+    el.style.display='none';
+  }
+}
+window.saveApiKey = function(){
+  const inp = document.getElementById('apiKeyInput');
+  const k = inp ? inp.value.trim() : '';
+  if(k) localStorage.setItem('nt_apikey', k);
+  updateApiKeyStatus(k);
+  const btn = document.getElementById('apiKeySaveBtn');
+  if(btn){
+    const orig=btn.textContent;
+    btn.textContent='✅ Tersimpan!';btn.style.background='#E6F9F0';btn.style.color='#0A7A4E';btn.style.borderColor='#A7F0C4';
+    setTimeout(()=>{btn.textContent=orig;btn.style.background='';btn.style.color='';btn.style.borderColor='';},2000);
+  }
+};
+// Auto-save on Enter
+document.getElementById('apiKeyInput').addEventListener('keydown', e=>{ if(e.key==='Enter') saveApiKey(); });
+loadApiKey();
+
+// ── Detect if running locally ──────────────────────────────────
+const IS_LOCAL = location.protocol === 'file:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+// ── Generate ────────────────────────────────────────────────────
+window.generateSummary = async function(){
+  if(IS_LOCAL){ showDeployGuide(); return; }
+
+  showState('Loading');
+  const btn = document.getElementById('generateAiBtn');
+  if(btn){ btn.disabled=true; btn.style.opacity='.6'; }
+
+  // Validate API key
+  const apiKey = localStorage.getItem('nt_apikey')||'';
+  if(!apiKey || !apiKey.startsWith('sk-ant')){
+    showState('Error');
+    const el=document.getElementById('aiErrorMsg');
+    if(el) el.textContent='API Key belum diisi atau tidak valid. Isi kolom API Key di atas lalu klik Simpan.';
+    if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+    return;
+  }
+
+  const msgs=['Membaca data proyek...','Menganalisis urgency & progress...','Menyusun kritik & rekomendasi...','Memfinalisasi laporan...'];
+  let mi=0;
+  const tick=setInterval(()=>{
+    const el=document.getElementById('aiLoadingMsg');
+    if(el){ el.textContent=msgs[mi%msgs.length]; mi++; }
+  },1400);
+
+  try{
+    const context=buildContext();
+    const prompt=`Kamu adalah konsultan senior proyek properti yang tajam, jujur, dan sangat memotivasi. Analisis data dashboard Non-Tender berikut secara mendalam. Gunakan BAHASA INDONESIA yang profesional namun bersemangat. Jawab HANYA dengan JSON valid (tanpa backtick, tanpa teks lain di luar JSON).
+
+${context}
+
+INSTRUKSI ANALISIS:
+- healthScore: hitung dari rasio Done/total, kurangi poin per item kritis aktif (-3), per item tanpa status (-1). Skor 0-100.
+- progressByDev: pct = Done/total*100 per developer. Status: "on track" >=60%, "perlu perhatian" 30-59%, "kritis" <30% atau ada item kritis aktif.
+- highlights: pola NYATA dari data, sebutkan nama proyek/developer spesifik. 2 positif + 2 perhatian.
+- kritik: JUJUR dan TAJAM, sebutkan nama proyek/item bermasalah. Tidak boleh generik. 3 kritik.
+- rekomendasi: aksi KONKRET dan SPESIFIK (sebut nama proyek/developer). Urutkan dari paling mendesak. 4 rekomendasi.
+- prediksi: peringatan ATAU optimisme berbasis tren data nyata.
+
+Format JSON (string maks 150 karakter):
+{"overview":"...","healthScore":0,"progressByDev":[{"name":"...","pct":0,"status":"on track"}],"highlights":[{"type":"positif","text":"..."},{"type":"positif","text":"..."},{"type":"perhatian","text":"..."},{"type":"perhatian","text":"..."}],"kritik":["...","...","..."],"rekomendasi":[{"prioritas":"tinggi","aksi":"...","dampak":"..."},{"prioritas":"tinggi","aksi":"...","dampak":"..."},{"prioritas":"sedang","aksi":"...","dampak":"..."},{"prioritas":"rendah","aksi":"...","dampak":"..."}],"prediksi":"..."}`;
+
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'content-type':'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:2048,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+
+    clearInterval(tick);
+    if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+    if(!res.ok){ const t=await res.text(); throw new Error('HTTP '+res.status+': '+t.slice(0,120)); }
+
+    const apiData = await res.json();
+    const raw = (apiData.content||[]).map(c=>c.text||'').join('').trim();
+
+    let parsed;
+    try{
+      let clean=raw.replace(/```[\w]*\n?/g,'').replace(/```/g,'').trim();
+      const s=clean.indexOf('{'), e=clean.lastIndexOf('}');
+      if(s===-1||e===-1) throw new Error('no JSON');
+      parsed=JSON.parse(clean.slice(s,e+1));
+    }catch(e){ throw new Error('JSON tidak valid: '+e.message); }
+
+    renderResult(parsed);
+
+  }catch(err){
+    clearInterval(tick);
+    if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+    showState('Error');
+    const el=document.getElementById('aiErrorMsg');
+    if(el) el.textContent = err.message||'Terjadi kesalahan.';
+  }
+};
+
+// ── Show deploy guide when running locally ─────────────────────
+function showDeployGuide(){
+  showState('Result');
+  const meta=document.getElementById('aiMetaBar');
+  if(meta) meta.innerHTML=`<span style="font-size:12px;font-weight:700;color:#926A00;font-family:'Plus Jakarta Sans',sans-serif;">⚠️ Dashboard berjalan secara lokal — AI Summary memerlukan hosting online</span>`;
+
+  const content=document.getElementById('aiContent');
+  if(!content) return;
+  content.innerHTML=`
+    <div style="max-width:640px;margin:0 auto;">
+
+      <div style="background:#FFF8E6;border:1.5px solid #FFD8A8;border-radius:12px;padding:16px 20px;margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:700;color:#926A00;margin-bottom:6px;font-family:'Plus Jakarta Sans',sans-serif;">Kenapa tidak bisa di file lokal?</div>
+        <div style="font-size:12.5px;color:#926A00;line-height:1.6;font-family:'Plus Jakarta Sans',sans-serif;">Browser memblokir request ke API eksternal dari file <code style="background:#FFE082;padding:1px 5px;border-radius:4px;">file:///</code> karena alasan keamanan (CORS policy). Solusinya: upload ke hosting gratis supaya punya URL <code style="background:#FFE082;padding:1px 5px;border-radius:4px;">https://</code>.</div>
+      </div>
+
+      <div style="font-size:14px;font-weight:700;color:#161929;margin-bottom:14px;font-family:'Plus Jakarta Sans',sans-serif;">🚀 Deploy ke Netlify Drop — gratis, 60 detik, tanpa akun</div>
+
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
+        ${[
+          ['1','Buka <strong>netlify.com/drop</strong>','Tidak perlu daftar, langsung buka di browser'],
+          ['2','Drag & drop file <strong>dashboard.html</strong>','Seret file dari folder Downloads ke halaman Netlify Drop'],
+          ['3','Tunggu upload selesai (~10 detik)','Netlify otomatis memberi URL seperti <code style="background:#F0F2F8;padding:1px 5px;border-radius:4px;">https://random-name.netlify.app</code>'],
+          ['4','Buka URL tersebut di browser','Klik Generate AI Summary — langsung berjalan!'],
+        ].map(([n,t,d])=>`
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:28px;height:28px;border-radius:8px;background:#3B6CF4;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;font-family:'JetBrains Mono',monospace;">${n}</div>
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#161929;font-family:'Plus Jakarta Sans',sans-serif;">${t}</div>
+              <div style="font-size:12px;color:#9296B0;font-family:'Plus Jakarta Sans',sans-serif;margin-top:2px;">${d}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <div style="background:#E6F9F0;border:1.5px solid #A7F0C4;border-radius:12px;padding:14px 18px;margin-bottom:20px;">
+        <div style="font-size:12px;font-weight:700;color:#0A7A4E;margin-bottom:4px;font-family:'Plus Jakarta Sans',sans-serif;">✅ Keuntungan hosting online</div>
+        <div style="font-size:12px;color:#0A7A4E;line-height:1.7;font-family:'Plus Jakarta Sans',sans-serif;">
+          • AI Summary langsung jalan tanpa copy-paste<br>
+          • Bisa dibuka dari HP, tablet, atau komputer lain<br>
+          • Bisa share URL ke rekan kerja<br>
+          • Data tetap tersimpan di browser masing-masing (localStorage)
+        </div>
+      </div>
+
+      <div style="text-align:center;">
+        <a href="https://app.netlify.com/drop" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:11px 26px;border-radius:99px;background:linear-gradient(135deg,#3B6CF4,#7C4DDB);color:#fff;font-size:13px;font-weight:700;text-decoration:none;font-family:'Plus Jakarta Sans',sans-serif;box-shadow:0 4px 14px rgba(59,108,244,.3);">
+          🌐 Buka Netlify Drop
+        </a>
+        <div style="font-size:11.5px;color:#9296B0;margin-top:10px;font-family:'Plus Jakarta Sans',sans-serif;">netlify.com/drop · gratis · tanpa akun · tanpa install</div>
+      </div>
+    </div>`;
+
+  const ts=document.getElementById('aiTimestamp');
+  if(ts) ts.textContent='Panduan deploy tersedia';
+}
+
+window.copyAgain=async function(){
+  const context=buildContext();
+  const msg=`Tolong buatkan AI Summary untuk dashboard proyek Non-Tender saya. Analisis tajam, spesifik, jujur, dan memotivasi dalam Bahasa Indonesia.\n\nDATA PROYEK:\n${context}`;
+  try{
+    await navigator.clipboard.writeText(msg);
+    const btn=event.target;
+    const orig=btn.innerHTML;
+    btn.innerHTML='✅ Tersalin!';btn.style.background='#E6F9F0';btn.style.color='#0A7A4E';
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.background='';btn.style.color='';},2000);
+  }catch(e){alert('Gagal salin otomatis. Coba manual.');}
+};
+
+// ── Render result ───────────────────────────────────────────────
+function renderResult(d){
+  // Meta bar
+  const meta=document.getElementById('aiMetaBar');
+  const score=d.healthScore||0;
+  const scoreColor=score>=70?'#0A7A4E':score>=40?'#926A00':'#B02A2A';
+  const scoreBg=score>=70?'#E6F9F0':score>=40?'#FFF8E6':'#FEF0F0';
+  meta.innerHTML=`
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#9296B0;">✨ AI Analysis</span>
+    <span style="flex:1"></span>
+    <span style="font-size:12px;font-weight:700;color:#585C80;font-family:'Plus Jakarta Sans',sans-serif;">Health Score</span>
+    <span style="background:${scoreBg};color:${scoreColor};font-size:13px;font-weight:800;padding:3px 14px;border-radius:99px;font-family:'JetBrains Mono',monospace;">${score}/100</span>`;
+
+  // Content
+  const content=document.getElementById('aiContent');
+  content.innerHTML='';
+
+  // ── Overview card
+  const ovCard=card();
+  ovCard.innerHTML=`
+    <div class="ai-section-title">
+      <div class="ai-section-icon" style="background:#EEF2FF;">📊</div>
+      Overview Keseluruhan
+    </div>
+    <p style="font-size:13.5px;color:#2B2F50;line-height:1.6;font-family:'Plus Jakarta Sans',sans-serif;margin:0 0 18px;">${esc(d.overview||'')}</p>
+    <div style="font-size:12px;color:#9296B0;font-family:'Plus Jakarta Sans',sans-serif;font-style:italic;">${esc(d.prediksi||'')}</div>`;
+  content.appendChild(ovCard);
+
+  // ── Progress per developer
+  if(d.progressByDev&&d.progressByDev.length){
+    const progCard=card();
+    let progHtml=`<div class="ai-section-title"><div class="ai-section-icon" style="background:#E6F9F0;">📈</div>Progress per Developer</div>`;
+    d.progressByDev.forEach(dev=>{
+      const pct=Math.min(100,Math.max(0,dev.pct||0));
+      const fc=pct>=70?'#12B76A':pct>=40?'#F59E0B':'#EF4444';
+      const stColor=dev.status==='on track'?'#0A7A4E':dev.status==='kritis'?'#B02A2A':'#926A00';
+      const stBg=dev.status==='on track'?'#E6F9F0':dev.status==='kritis'?'#FEF0F0':'#FFF8E6';
+      progHtml+=`
+        <div class="ai-prog-bar-wrap">
+          <div class="ai-prog-label">
+            <span style="font-weight:600;color:#2B2F50;">${esc(dev.name)}</span>
+            <span style="display:flex;align-items:center;gap:6px;">
+              <span style="background:${stBg};color:${stColor};font-size:10.5px;font-weight:700;padding:2px 9px;border-radius:99px;">${esc(dev.status)}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${fc};">${pct}%</span>
+            </span>
+          </div>
+          <div class="ai-prog-track"><div class="ai-prog-fill" style="width:${pct}%;background:${fc};"></div></div>
+        </div>`;
+    });
+    progCard.innerHTML=progHtml;
+    content.appendChild(progCard);
+  }
+
+  // ── Highlights grid
+  if(d.highlights&&d.highlights.length){
+    const hlCard=card();
+    let hlHtml=`<div class="ai-section-title"><div class="ai-section-icon" style="background:#FFF8E6;">💡</div>Temuan Penting</div>`;
+    d.highlights.forEach(h=>{
+      const isPos=h.type==='positif';
+      const dotColor=isPos?'#12B76A':'#F59E0B';
+      hlHtml+=`<div class="ai-bullet"><div class="ai-bullet-dot" style="background:${dotColor};"></div><div class="ai-bullet-text">${esc(h.text||'')}</div></div>`;
+    });
+    hlCard.innerHTML=hlHtml;
+    content.appendChild(hlCard);
+  }
+
+  // ── Kritik
+  if(d.kritik&&d.kritik.length){
+    const krCard=card();
+    let krHtml=`<div class="ai-section-title"><div class="ai-section-icon" style="background:#FEF0F0;">🔍</div>Kritik Konstruktif</div>`;
+    d.kritik.forEach(k=>{
+      krHtml+=`<div class="ai-bullet"><div class="ai-bullet-dot" style="background:#EF4444;"></div><div class="ai-bullet-text">${esc(k||'')}</div></div>`;
+    });
+    krCard.innerHTML=krHtml;
+    content.appendChild(krCard);
+  }
+
+  // ── Rekomendasi
+  if(d.rekomendasi&&d.rekomendasi.length){
+    const recCard=card();
+    let recHtml=`<div class="ai-section-title"><div class="ai-section-icon" style="background:#EEF2FF;">🚀</div>Rekomendasi Aksi</div>`;
+    d.rekomendasi.forEach((r,idx)=>{
+      const pc=r.prioritas==='tinggi'?'#B02A2A':r.prioritas==='sedang'?'#926A00':'#0A7A4E';
+      const pb=r.prioritas==='tinggi'?'#FEF0F0':r.prioritas==='sedang'?'#FFF8E6':'#E6F9F0';
+      recHtml+=`
+        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #F0F2F8;align-items:flex-start;">
+          <div style="width:22px;height:22px;border-radius:6px;background:#EEF2FF;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#3B6CF4;flex-shrink:0;font-family:'JetBrains Mono',monospace;">${idx+1}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px;flex-wrap:wrap;">
+              <span style="background:${pb};color:${pc};font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.5px;">${esc(r.prioritas||'')}</span>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:#161929;margin-bottom:3px;font-family:'Plus Jakarta Sans',sans-serif;">${esc(r.aksi||'')}</div>
+            <div style="font-size:11.5px;color:#9296B0;font-family:'Plus Jakarta Sans',sans-serif;">💬 ${esc(r.dampak||'')}</div>
+          </div>
+        </div>`;
+    });
+    recCard.innerHTML=recHtml;
+    content.appendChild(recCard);
+  }
+
+  // Timestamp
+  const ts=document.getElementById('aiTimestamp');
+  if(ts){const now=new Date();ts.textContent='Dianalisis '+now.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})+', '+now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});}
+
+  showState('Result');
+}
+
+function card(){const d=document.createElement('div');d.className='ai-section-card';return d;}
+function esc(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// Wire generate button
+const btn=document.getElementById('generateAiBtn');
+if(btn)btn.addEventListener('click',generateSummary);
+
+})();
+</script>
+</body>
+</html>
